@@ -1,6 +1,6 @@
 # Remote Connector
-Remote connector opens an ssh interactive session to chosen remote computer.
-It looks for a hidden file named *.remote_connections* into logged user home directory.
+Remote connector opens an ssh interactive session chosen by a CLI menu'.
+The menu' is generated looking for a hidden file named *.remote_connections* into logged user home directory.
 The file content is an array of json object which syntax is, here below:
 ```json
 [
@@ -12,3 +12,5 @@ The file content is an array of json object which syntax is, here below:
     }
 ]
 ```
+
+Each json object stays for a remote connection.
