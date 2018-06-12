@@ -1,5 +1,5 @@
 // Package file
-package file
+package remotemachine
 
 import (
 	"fmt"
