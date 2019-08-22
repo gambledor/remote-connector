@@ -13,6 +13,7 @@ import (
 	"log"
 	"os"
 	"strconv"
+	"text/template"
 
 	"github.com/gambledor/remote-connector/remotemachine"
 )
@@ -21,7 +22,7 @@ const (
 	// ConfFileName is the configuration file name
 	ConfFileName string = ".remote_connections"
 	// version is the software version
-	version string = "0.5"
+	version string = "0.6"
 	// author is the software author
 	author = "Giuseppe Lo Brutto"
 )
@@ -36,13 +37,23 @@ func init() {
 	flag.IntVar(&choise, "c", 0, "The chosen remote machine")
 }
 
-func showRemoteMachines(remoteMachines *[]remotemachine.RemoteMachine) {
-	for idx, machine := range *remoteMachines {
-		// add 1 as index offset
-		fmt.Printf("%d) %s\n", idx+1, machine.Name)
+func add(x, y int) int {
+	return x + y
+}
+
+func showRemoteMachinesMenu(remoteMachines *[]remotemachine.RemoteMachine) {
+	const templateMenu = `------------------------------------------------------------
+REMOTE MACHINES
+------------------------------------------------------------
+{{ range $index, $item := . }} {{ add $index 1 }} - {{ $item.Name }}
+{{ else }} no remote machines configured {{ end }}------------------------------------------------------------
+Press 0 to quit.
+------------------------------------------------------------
+`
+	var menu = template.Must(template.New("menu").Funcs(template.FuncMap{"add": add}).Parse(templateMenu))
+	if err := menu.Execute(os.Stdout, remoteMachines); err != nil {
+		log.Fatal(err)
 	}
-	// press 0 to quit
-	fmt.Printf("%d) %s\n", 0, "quit")
 }
 
 func getChoice(remoteMachines *[]remotemachine.RemoteMachine) int {
@@ -83,13 +94,13 @@ func main() {
 		os.Exit(1)
 	}
 	if len(os.Args) > 1 && os.Args[1] == "list" {
-		showRemoteMachines(remoteMachines)
+		showRemoteMachinesMenu(remoteMachines)
 		os.Exit(0)
 	}
 	flag.Parse()
 	// 2. show a remote connections menu and get choise
 	if choise == 0 {
-		showRemoteMachines(remoteMachines)
+		showRemoteMachinesMenu(remoteMachines)
 		choise = getChoice(remoteMachines)
 	}
 	// 4. make a ssh connction to the chosen machine
