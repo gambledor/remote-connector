@@ -4,7 +4,7 @@
 // by a configuration hidden file name .remote_connections
 // Before build exec git rev-parse --short HEAD and place
 // the result in build command as follows
-// go build -ldflags "-x main.Build=<sha1>" cmd/remoteconnector.go
+// go build -ldflags "-X main.Build=`git rev-parse --short HEAD" cmd/remoteconnector.go
 package main
 
 import (
@@ -20,9 +20,9 @@ import (
 
 const (
 	// ConfFileName is the configuration file name
-	ConfFileName string = ".remote_connections"
+	confFileName string = ".remote_connections"
 	// version is the software version
-	version string = "0.6"
+	version string = "0.7"
 	// author is the software author
 	author = "Giuseppe Lo Brutto"
 )
@@ -88,7 +88,7 @@ func main() {
 	// 1. read configuration file for remote connections
 	var remoteMachines *[]remotemachine.RemoteMachine
 
-	remoteMachines, err := remotemachine.ReadConfigFile(os.Getenv("HOME"), ConfFileName)
+	remoteMachines, err := remotemachine.ReadConfigFile(os.Getenv("HOME"), confFileName)
 	if err != nil {
 		log.Fatal(err)
 		os.Exit(1)
