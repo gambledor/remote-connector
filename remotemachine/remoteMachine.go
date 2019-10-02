@@ -36,8 +36,13 @@ func ReadConfigFile(basePath, fileName string) (*[]RemoteMachine, error) {
 }
 
 // Connect execute the connection to the chosen remoteMachine
-func (rm *RemoteMachine) Connect() error {
-	connectionString := fmt.Sprintf("%s@%s", rm.User, rm.Host)
+func (rm *RemoteMachine) Connect(withX bool) error {
+	X := ""
+	if withX {
+		X = "-X"
+	}
+
+	connectionString := fmt.Sprintf(" %s %s@%s", X, rm.User, rm.Host)
 	cmd := exec.Command(rm.Protocol, connectionString)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout

@@ -22,7 +22,7 @@ const (
 	// ConfFileName is the configuration file name
 	confFileName string = ".remote_connections"
 	// version is the software version
-	version string = "0.7"
+	version string = "0.8"
 	// author is the software author
 	author = "Giuseppe Lo Brutto"
 )
@@ -31,10 +31,12 @@ var (
 	// Build is to compile passing -ldflags "-X main.Build <build sha1>"
 	Build  string
 	choise int
+	xmode  bool
 )
 
 func init() {
-	flag.IntVar(&choise, "c", 0, "The chosen remote machine")
+	flag.IntVar(&choise, "c", 0, "The chosen remote machine.")
+	flag.BoolVar(&xmode, "X", false, "Enable X mode.")
 }
 
 func add(x, y int) int {
@@ -106,7 +108,7 @@ func main() {
 	// 4. make a ssh connction to the chosen machine
 	if choise > 0 && choise <= len(*remoteMachines) {
 		fmt.Printf("You've chosen to connect to \033[96m%s\033[0m\n", (*remoteMachines)[choise-1].Host)
-		if err := (*remoteMachines)[choise-1].Connect(); err != nil {
+		if err := (*remoteMachines)[choise-1].Connect(xmode); err != nil {
 			log.Fatal(err)
 		}
 	}
