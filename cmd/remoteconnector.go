@@ -22,7 +22,7 @@ const (
 	// ConfFileName is the configuration file name
 	confFileName string = ".remote_connections"
 	// version is the software version
-	version string = "0.8"
+	version string = "0.8.1"
 	// author is the software author
 	author = "Giuseppe Lo Brutto"
 )

@@ -1,6 +1,5 @@
+// Package remotemachine provides file management utils
 // Copyright (c) 2018-present, Giuseppe Lo Brutto All rights reserved
-
-// Package file provide file management utils
 package remotemachine
 
 import (
@@ -37,13 +36,16 @@ func ReadConfigFile(basePath, fileName string) (*[]RemoteMachine, error) {
 
 // Connect execute the connection to the chosen remoteMachine
 func (rm *RemoteMachine) Connect(withX bool) error {
-	X := ""
+	connectionString := fmt.Sprintf("%s@%s", rm.User, rm.Host)
+
+	var cmd *exec.Cmd
 	if withX {
-		X = "-X"
+		cmd = exec.Command(rm.Protocol, "-X", connectionString)
+	} else {
+		cmd = exec.Command(rm.Protocol, connectionString)
 	}
 
-	connectionString := fmt.Sprintf(" %s %s@%s", X, rm.User, rm.Host)
-	cmd := exec.Command(rm.Protocol, connectionString)
+	cmd = exec.Command(rm.Protocol, connectionString)
 	cmd.Stdin = os.Stdin
 	cmd.Stdout = os.Stdout
 	cmd.Stderr = os.Stderr
