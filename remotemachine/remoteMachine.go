@@ -5,7 +5,9 @@ package remotemachine
 import (
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io/ioutil"
+	"log"
 	"os"
 	"os/exec"
 	"path/filepath"
@@ -54,4 +56,24 @@ func (rm *RemoteMachine) Connect(withX bool) error {
 	}
 
 	return nil
+}
+
+func add(x, y int) int {
+	return x + y
+}
+
+// ShowRemoteMachinesMenu shows the menu of configured remote connections.
+func ShowRemoteMachinesMenu(remoteMachines *[]RemoteMachine) {
+	const templateMenu = `------------------------------------------------------------
+REMOTE MACHINES
+------------------------------------------------------------
+{{ range $index, $item := . }} {{ add $index 1 }} - {{ $item.Name }}
+{{ else }} no remote machines configured {{ end }}------------------------------------------------------------
+Press 0 to quit.
+------------------------------------------------------------
+`
+	var menu = template.Must(template.New("menu").Funcs(template.FuncMap{"add": add}).Parse(templateMenu))
+	if err := menu.Execute(os.Stdout, remoteMachines); err != nil {
+		log.Fatal(err)
+	}
 }

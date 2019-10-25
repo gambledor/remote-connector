@@ -13,23 +13,17 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"text/template"
 
+	"github.com/gambledor/remote-connector/build"
 	"github.com/gambledor/remote-connector/remotemachine"
 )
 
 const (
-	// ConfFileName is the configuration file name
+	// ConfFileName holds the configuration file name
 	confFileName string = ".remote_connections"
-	// version is the software version
-	version string = "0.8.1"
-	// author is the software author
-	author = "Giuseppe Lo Brutto"
 )
 
 var (
-	// Build is to compile passing -ldflags "-X main.Build <build sha1>"
-	Build  string
 	choise int
 	xmode  bool
 )
@@ -39,28 +33,10 @@ func init() {
 	flag.BoolVar(&xmode, "X", false, "Enable X mode.")
 }
 
-func add(x, y int) int {
-	return x + y
-}
-
-func showRemoteMachinesMenu(remoteMachines *[]remotemachine.RemoteMachine) {
-	const templateMenu = `------------------------------------------------------------
-REMOTE MACHINES
-------------------------------------------------------------
-{{ range $index, $item := . }} {{ add $index 1 }} - {{ $item.Name }}
-{{ else }} no remote machines configured {{ end }}------------------------------------------------------------
-Press 0 to quit.
-------------------------------------------------------------
-`
-	var menu = template.Must(template.New("menu").Funcs(template.FuncMap{"add": add}).Parse(templateMenu))
-	if err := menu.Execute(os.Stdout, remoteMachines); err != nil {
-		log.Fatal(err)
-	}
-}
-
 func getChoice(remoteMachines *[]remotemachine.RemoteMachine) int {
 	var choise int
 	var exit bool // initialized to false
+
 	// 3. the user makes a choise to witch machine wants to connect to
 	for !exit {
 		fmt.Print("> ")
@@ -83,7 +59,7 @@ func getChoice(remoteMachines *[]remotemachine.RemoteMachine) int {
 func main() {
 
 	if len(os.Args) > 1 && os.Args[1] == "version" {
-		fmt.Printf("remote connector \033[32m%s-%s\033[0m, created by \033[96m%s\n", version, Build, author)
+		fmt.Printf("remote connector \033[32m%s-%s\033[0m, created by \033[96m%s\033[0m\nbuilt by \033[96m%s\033[0m\non %s\n", build.Version, build.Build, build.Author, build.User, build.Time)
 		os.Exit(0)
 	}
 
@@ -96,16 +72,16 @@ func main() {
 		os.Exit(1)
 	}
 	if len(os.Args) > 1 && os.Args[1] == "list" {
-		showRemoteMachinesMenu(remoteMachines)
+		remotemachine.ShowRemoteMachinesMenu(remoteMachines)
 		os.Exit(0)
 	}
 	flag.Parse()
 	// 2. show a remote connections menu and get choise
 	if choise == 0 {
-		showRemoteMachinesMenu(remoteMachines)
+		remotemachine.ShowRemoteMachinesMenu(remoteMachines)
 		choise = getChoice(remoteMachines)
 	}
-	// 4. make a ssh connction to the chosen machine
+	// 3. make a ssh connction to the chosen machine
 	if choise > 0 && choise <= len(*remoteMachines) {
 		fmt.Printf("You've chosen to connect to \033[96m%s\033[0m\n", (*remoteMachines)[choise-1].Host)
 		if err := (*remoteMachines)[choise-1].Connect(xmode); err != nil {
