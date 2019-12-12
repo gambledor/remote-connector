@@ -10,83 +10,74 @@ package main
 import (
 	"flag"
 	"fmt"
+	"github.com/gambledor/remote-connector/build"
+	"github.com/gambledor/remote-connector/remotemachines"
 	"log"
 	"os"
-	"strconv"
-
-	"github.com/gambledor/remote-connector/build"
-	"github.com/gambledor/remote-connector/remotemachine"
 )
 
 const (
 	// ConfFileName holds the configuration file name
 	confFileName string = ".remote_connections"
+	version             = "Version: remote connector \033[32m%s-%s\033[0m, created by \033[96m%s\033[0m\nbuilt by \033[96m%s\033[0m\non %s\n"
+	usage        string = `Usage: %s
+Run remoteconnector
+
+Options:
+`
 )
 
 var (
-	choise int
+	choice int
 	xmode  bool
 )
 
 func init() {
-	flag.IntVar(&choise, "c", 0, "The chosen remote machine.")
+	flag.IntVar(&choice, "c", 0, "The chosen remote machine.")
 	flag.BoolVar(&xmode, "X", false, "Enable X mode.")
+	flag.Usage = func() {
+		_, _ = fmt.Fprintf(flag.CommandLine.Output(), usage, os.Args[0])
+		flag.PrintDefaults()
+	}
 }
 
-func getChoice(remoteMachines *[]remotemachine.RemoteMachine) int {
-	var choise int
-	var exit bool // initialized to false
-
-	// 3. the user makes a choise to witch machine wants to connect to
-	for !exit {
-		fmt.Print("> ")
-		var err error
-		var input string
-		if _, err = fmt.Scanf("%s", &input); err != nil {
-			fmt.Println("No choise has been made")
-		}
-		if choise, err = strconv.Atoi(input); err != nil {
-			fmt.Println("You have to enter a number")
-		}
-		if err == nil && choise >= 0 && choise <= len(*remoteMachines) {
-			exit = true
-		}
-	}
-
-	return choise
-}
-
-func main() {
-
-	if len(os.Args) > 1 && os.Args[1] == "version" {
-		fmt.Printf("remote connector \033[32m%s-%s\033[0m, created by \033[96m%s\033[0m\nbuilt by \033[96m%s\033[0m\non %s\n", build.Version, build.Build, build.Author, build.User, build.Time)
-		os.Exit(0)
-	}
-
-	// 1. read configuration file for remote connections
-	var remoteMachines *[]remotemachine.RemoteMachine
-
-	remoteMachines, err := remotemachine.ReadConfigFile(os.Getenv("HOME"), confFileName)
-	if err != nil {
-		log.Fatal(err)
-		os.Exit(1)
-	}
-	if len(os.Args) > 1 && os.Args[1] == "list" {
-		remotemachine.ShowRemoteMachinesMenu(remoteMachines)
-		os.Exit(0)
-	}
-	flag.Parse()
-	// 2. show a remote connections menu and get choise
-	if choise == 0 {
-		remotemachine.ShowRemoteMachinesMenu(remoteMachines)
-		choise = getChoice(remoteMachines)
+func manageConnection(remoteMachines remotemachines.RemoteMachines) {
+	// 2. show a remote connections menu and get choice
+	if choice == 0 {
+		remoteMachines.ShowRemoteMachinesMenu()
+		choice = remoteMachines.GetChoice()
 	}
 	// 3. make a ssh connction to the chosen machine
-	if choise > 0 && choise <= len(*remoteMachines) {
-		fmt.Printf("You've chosen to connect to \033[96m%s\033[0m\n", (*remoteMachines)[choise-1].Host)
-		if err := (*remoteMachines)[choise-1].Connect(xmode); err != nil {
+	if choice > 0 && choice <= len(remoteMachines.Machines) {
+		fmt.Printf("You've chosen to connect to \033[96m%s\033[0m\n", remoteMachines.Machines[choice-1].Host)
+		if err := remoteMachines.Machines[choice-1].Connect(xmode); err != nil {
 			log.Fatal(err)
 		}
 	}
 	fmt.Println("Bye Bye")
+}
+
+func main() {
+	flag.Parse()
+
+	// 1. read configuration file for remote connections
+	var remoteMachines remotemachines.RemoteMachines
+	if err := remoteMachines.ReadConfigFile(os.Getenv("HOME"), confFileName); err != nil {
+		log.Fatal(err)
+	}
+
+	if len(os.Args) < 1 {
+		manageConnection(remoteMachines)
+	} else {
+		switch os.Args[1] {
+		case "version":
+			fmt.Printf(version, build.Version, build.Build, build.Author, build.User, build.Time)
+			os.Exit(0)
+		case "list":
+			remoteMachines.ShowRemoteMachinesMenu()
+			os.Exit(0)
+		default:
+			log.Fatalf("Error: unknown command %s", os.Args[1])
+		}
+	}
 }
