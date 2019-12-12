@@ -66,7 +66,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if len(os.Args) < 1 {
+	if len(os.Args) == 1 {
 		manageConnection(remoteMachines)
 	} else {
 		switch os.Args[1] {
