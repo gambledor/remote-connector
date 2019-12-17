@@ -20,7 +20,7 @@ const (
 	// ConfFileName holds the configuration file name
 	confFileName string = ".remote_connections"
 	version             = "Version: remote connector \033[32m%s-%s\033[0m, created by \033[96m%s\033[0m\nbuilt by \033[96m%s\033[0m\non %s\n"
-	usage        string = `Usage: %s
+	usage        string = `Usage of %s:
 Run remoteconnector
 
 Options:
@@ -66,7 +66,7 @@ func main() {
 		log.Fatal(err)
 	}
 
-	if len(os.Args) == 1 {
+	if len(os.Args) == 1 || choice > 0 {
 		manageConnection(remoteMachines)
 	} else {
 		switch os.Args[1] {
